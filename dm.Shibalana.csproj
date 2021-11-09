@@ -1,0 +1,26 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net5.0</TargetFramework>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <Compile Remove="Data\**" />
+    <Compile Remove="DiscordBot\**" />
+    <Compile Remove="Prices\**" />
+    <Compile Remove="TelegramBot\**" />
+    <EmbeddedResource Remove="Data\**" />
+    <EmbeddedResource Remove="DiscordBot\**" />
+    <EmbeddedResource Remove="Prices\**" />
+    <EmbeddedResource Remove="TelegramBot\**" />
+    <None Remove="Data\**" />
+    <None Remove="DiscordBot\**" />
+    <None Remove="Prices\**" />
+    <None Remove="TelegramBot\**" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Newtonsoft.Json" Version="13.0.1" />
+  </ItemGroup>
+
+</Project>

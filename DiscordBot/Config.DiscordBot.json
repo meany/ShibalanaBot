@@ -1,0 +1,18 @@
+{
+  // DISCORD
+  "BotPrefix": "!",
+  "BotToken": "<TOKEN>",
+  "GuildId": 0,
+  "ChannelIds": [ 0 ],
+  "AdminChannelId": 0,
+  "EmoteGood": "✅",
+  "EmoteBad": "❌",
+  "EmoteShiba": "spinners",
+  "RequestCooldown": 60,
+  "AdminRoleIds": [ 0 ],
+
+  // DATABASE
+  "ConnectionStrings": {
+    "Database": "<DATABASE>"
+  }
+}
