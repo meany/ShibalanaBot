@@ -1,4 +1,5 @@
 ﻿using CoinGecko.Clients;
+using CoinGecko.Entities.Response.Coins;
 using dm.Shibalana.Data;
 using dm.Shibalana.Data.Models;
 using dm.Shibalana.Response;
@@ -24,18 +25,25 @@ namespace dm.Shibalana.Prices
         private static AppDbContext db;
         private static readonly Logger log = LogManager.GetCurrentClassLogger();
 
-        private static LanadexTradesDatum marketData;
+        private static LanadexTradesDatum marketDataSerum;
+        private static CoinFullDataById marketDataCG;
         private static CoinGecko.Entities.Response.Simple.Price priceData;
         private static BigInteger shibaSupply;
-        private static BigInteger shibaMain;
         private static BigInteger shibaCirc;
         private static int shibaHolders;
         private static int shibaDecimals;
+        private static decimal serumVolume;
 
         private static Price prices24hAgo;
 
         private static readonly string tokenAddress = "Dhg9XnzJWzSQqH2aAnhPTEJHGQAkALDfD98MA499A7pa";
-        private static readonly string mainAddress = "2vQBVYD6fn1Z4iA2JWo3qY1tMBanspkHY4TfLe51hj9b";
+        private static readonly string[] teamAddresses = new string[] {
+            "2vQBVYD6fn1Z4iA2JWo3qY1tMBanspkHY4TfLe51hj9b",
+            "Ewg558ARXCoEtCHeGmicUznRWvbae6eczGUFS1tkPBX8",
+            "A8GFDkvqg6WLGTsXksiabD3oKeB2aQXtNoG98R9Hr5QG",
+            "9huAyo2PytpiqqNDvvd5tb2nQNXpjE6xKS81M4BdeVES"
+        };
+
         private static readonly string serumSHIBA_USDC_1dot0 = "3M8uZhLZMxFUedsEgPzywZr9qbGTv3kKNMCEfAmg8iyK";
         private static string serumCurrent = serumSHIBA_USDC_1dot0;
 
@@ -83,57 +91,117 @@ namespace dm.Shibalana.Prices
                 //    .FirstOrDefault();
 
                 await GetInfo();
+                var group = Guid.NewGuid();
 
-                // shiba prices
-                decimal priceOneShiba = marketData.Price;
-                decimal priceOneUsd = 1 / priceOneShiba;
+                // SERUM
+
+                // prices
+                decimal serum_priceOneShiba = marketDataSerum.Price;
+                decimal serum_priceOneUsd = 1 / serum_priceOneShiba;
 
                 // market cap
                 decimal supply = shibaSupply.ToToken(shibaDecimals);
                 decimal circ = shibaCirc.ToToken(shibaDecimals);
-                decimal fullMktCapUsd = priceOneShiba * supply;
-                decimal circMktCapUsd = priceOneShiba * circ;
+                decimal serum_fullMktCapUsd = serum_priceOneShiba * supply;
+                decimal serum_circMktCapUsd = serum_priceOneShiba * circ;
+                int serum_volumeUsd = (int)Math.Round(serumVolume);
 
-                decimal mktCapUsdChgAmt = fullMktCapUsd - prices24hAgo.FullMarketCapUSD;
-                Change mktCapUsdChg = (mktCapUsdChgAmt > 0) ? Change.Up : (mktCapUsdChgAmt < 0) ? Change.Down : Change.None;
-                decimal mktCapUsdChgPct = (Math.Abs(mktCapUsdChgAmt) / (prices24hAgo.FullMarketCapUSD + 1));
+                decimal serum_mktCapUsdChgAmt = serum_fullMktCapUsd - prices24hAgo.FullMarketCapUSD;
+                Change serum_mktCapUsdChg = (serum_mktCapUsdChgAmt > 0) ?
+                    Change.Up : (serum_mktCapUsdChgAmt < 0) ? Change.Down : Change.None;
+                decimal serum_mktCapUsdChgPct = (Math.Abs(serum_mktCapUsdChgAmt) / prices24hAgo.FullMarketCapUSD) * 100;
 
-                //// volume
-                //int volumeUsd = (int)Math.Round(data.MarketData.TotalVolume["usd"].Value);
+                // changes
+                decimal serum_changeUsd = serum_priceOneShiba - prices24hAgo.PriceUSDCForOneSHIBA;
+                Change serum_priceUsdChg = (serum_changeUsd > 0) ?
+                    Change.Up : (serum_changeUsd < 0) ? Change.Down : Change.None;
+                decimal serum_changeUsdPct = (Math.Abs(serum_changeUsd) / prices24hAgo.PriceUSDCForOneSHIBA) * 100;
 
-                // price changes
-                decimal changeUsd = priceOneShiba - prices24hAgo.PriceUSDCForOneSHIBA;
-                Change priceUsdChg = (changeUsd > 0) ? Change.Up : (changeUsd < 0) ? Change.Down : Change.None;
-                decimal changeUsdPct = (Math.Abs(changeUsd) / (prices24hAgo.PriceUSDCForOneSHIBA + 1));
-
-                var group = Guid.NewGuid();
-                var item = new Price
+                var serum_item = new Price
                 {
                     Date = DateTime.UtcNow,
                     Group = group,
-                    PriceSHIBAForOneUSDC = priceOneUsd,
-                    PriceUSDCForOneSHIBA = priceOneShiba,
+                    PriceSHIBAForOneUSDC = serum_priceOneUsd,
+                    PriceUSDCForOneSHIBA = serum_priceOneShiba,
                     Source = PriceSource.Lanadex,
 
-                    FullMarketCapUSD = int.Parse(Math.Round(fullMktCapUsd).ToString()),
-                    CircMarketCapUSD = int.Parse(Math.Round(circMktCapUsd).ToString()),
+                    FullMarketCapUSD = int.Parse(Math.Round(serum_fullMktCapUsd).ToString()),
+                    CircMarketCapUSD = int.Parse(Math.Round(serum_circMktCapUsd).ToString()),
 
-                    PriceUSD = priceOneShiba,
+                    PriceUSD = serum_priceOneShiba,
 
-                    MarketCapUSDChange = mktCapUsdChg,
-                    MarketCapUSDChangePct = Math.Round(mktCapUsdChgPct, 8) > 999 ? 999 : Math.Round(mktCapUsdChgPct, 8),
-                    PriceUSDChange = priceUsdChg,
-                    PriceUSDChangePct = changeUsdPct,
+                    MarketCapUSDChange = serum_mktCapUsdChg,
+                    MarketCapUSDChangePct = Math.Round(serum_mktCapUsdChgPct, 8) > 999 ? 999 : Math.Round(serum_mktCapUsdChgPct, 8),
+                    PriceUSDChange = serum_priceUsdChg,
+                    PriceUSDChangePct = serum_changeUsdPct,
 
-                    //VolumeUSD = volumeUsd
+                    VolumeUSD = serum_volumeUsd
                 };
 
-                db.Add(item);
+                db.Add(serum_item);
 
-                log.Info($"Saving prices to database {group}");
+                log.Info($"Saving {serum_item.Source} prices to database {group}");
                 db.SaveChanges();
 
-                var item2 = new Stat
+                // COING
+
+                // prices
+                decimal coinG_priceUsd = decimal.Parse(marketDataCG.MarketData.CurrentPrice["usd"].Value.ToString(), NumberStyles.Any);
+                decimal coinG_priceOneUsd = 1 / coinG_priceUsd;
+
+                // market cap
+                decimal coinG_mktCapUsd = decimal.Parse(marketDataCG.MarketData.MarketCap["usd"].Value.ToString());
+                decimal coinG_mktCapUsdChgAmt = (marketDataCG.MarketData.MarketCapChange24HInCurrency.Count == 0) ?
+                    0 : decimal.Parse(marketDataCG.MarketData.MarketCapChange24HInCurrency["usd"].ToString(), NumberStyles.Any);
+                Change coinG_mktCapUsdChg = (coinG_mktCapUsdChgAmt > 0) ?
+                    Change.Up : (coinG_mktCapUsdChgAmt < 0) ? Change.Down : Change.None;
+                decimal coinG_mktCapUsdChgPct = (marketDataCG.MarketData.MarketCapChangePercentage24HInCurrency.Count == 0) ?
+                    0 : decimal.Parse(marketDataCG.MarketData.MarketCapChangePercentage24HInCurrency["usd"].ToString(), NumberStyles.Any);
+                int coinG_volumeUsd = (int)Math.Round(marketDataCG.MarketData.TotalVolume["usd"].Value);
+
+                // changes
+                string coinG_changeUsd = "0";
+                string coinG_changeUsdPct = "0";
+                if (marketDataCG.MarketData.PriceChange24HInCurrency.Count > 0 &&
+                    marketDataCG.MarketData.PriceChangePercentage24HInCurrency.Count > 0)
+                {
+                    coinG_changeUsd = marketDataCG.MarketData.PriceChange24HInCurrency["usd"].ToString();
+                    coinG_changeUsdPct = marketDataCG.MarketData.PriceChangePercentage24HInCurrency["usd"].ToString();
+                }
+                decimal coinG_priceUsdChgAmt = decimal.Parse(coinG_changeUsd, NumberStyles.Any);
+                Change coinG_priceUsdChg = (coinG_priceUsdChgAmt > 0) ?
+                    Change.Up : (coinG_priceUsdChgAmt < 0) ? Change.Down : Change.None;
+                decimal coinG_priceUsdChgPct = decimal.Parse(coinG_changeUsdPct, NumberStyles.Any);
+
+                var coinG_item = new Price
+                {
+                    Date = DateTime.UtcNow,
+                    Group = group,
+                    PriceSHIBAForOneUSDC = coinG_priceOneUsd,
+                    PriceUSDCForOneSHIBA = coinG_priceUsd,
+                    Source = PriceSource.CoinGecko,
+
+                    FullMarketCapUSD = int.Parse(Math.Round(serum_fullMktCapUsd).ToString()),
+                    CircMarketCapUSD = int.Parse(Math.Round(serum_circMktCapUsd).ToString()),
+
+                    PriceUSD = coinG_priceUsd,
+
+                    MarketCapUSDChange = coinG_mktCapUsdChg,
+                    MarketCapUSDChangePct = Math.Round(coinG_mktCapUsdChgPct, 8) > 999 ? 999 : Math.Round(coinG_mktCapUsdChgPct, 8),
+                    PriceUSDChange = coinG_priceUsdChg,
+                    PriceUSDChangePct = coinG_priceUsdChgPct,
+
+                    VolumeUSD = coinG_volumeUsd
+                };
+
+                db.Add(coinG_item);
+
+                log.Info($"Saving {coinG_item.Source} prices to database {group}");
+                db.SaveChanges();
+
+                // STATS
+
+                var stat = new Stat
                 {
                     Date = DateTime.UtcNow,
                     Group = group,
@@ -142,7 +210,7 @@ namespace dm.Shibalana.Prices
                     Holders = shibaHolders
                 };
 
-                db.Add(item2);
+                db.Add(stat);
 
                 log.Info($"Saving stats to database {group}");
                 db.SaveChanges();
@@ -155,12 +223,18 @@ namespace dm.Shibalana.Prices
 
         private async Task GetInfo()
         {
-            GetShibaMarketData();
-            GetShibaStats();
+            GetSerumMarketData();
+            GetSerumVolumeData();
+            GetCGMarketData();
+            GetShibaCirc();
             //GetSimplePrices();
             GetPrices24hAgo();
 
-            while (prices24hAgo == null || marketData == null || shibaCirc == 0)
+            while (prices24hAgo == null || 
+                marketDataSerum == null || 
+                marketDataCG == null || 
+                serumVolume == 0 || 
+                shibaCirc == 0)
                 await Task.Delay(200);
         }
 
@@ -198,23 +272,28 @@ namespace dm.Shibalana.Prices
         //    }
         //}
 
-        private async void GetShibaStats()
+        private async void GetShibaCirc()
         {
             try
             {
                 var client = new RestClient("https://api.solscan.io");
                 var req1 = new RestRequest($"account?address={tokenAddress}", DataFormat.Json);
                 var res1 = await client.GetAsync<Solscan>(req1);
-                var req2 = new RestRequest($"account?address={mainAddress}", DataFormat.Json);
-                var res2 = await client.GetAsync<Solscan>(req2);
                 var req3 = new RestRequest($"token/meta?token={tokenAddress}", DataFormat.Json);
                 var res3 = await client.GetAsync<Solscan>(req3);
+
+                var teamAmt = new BigInteger();
+                foreach (string addr in teamAddresses)
+                {
+                    var req = new RestRequest($"account?address={addr}", DataFormat.Json);
+                    var res = await client.GetAsync<Solscan>(req);
+                    teamAmt += BigInteger.Parse(res.Data.TokenInfo.TokenAmount.Amount);
+                }
 
                 shibaDecimals = res1.Data.TokenInfo.Decimals;
 
                 shibaSupply = BigInteger.Parse(res1.Data.TokenInfo.Supply);
-                shibaMain = BigInteger.Parse(res2.Data.TokenInfo.TokenAmount.Amount);
-                shibaCirc = shibaSupply - shibaMain;
+                shibaCirc = shibaSupply - teamAmt;
                 shibaHolders = res3.Data.Holder;
 
                 log.Info($"GetShibaCirc: OK");
@@ -225,16 +304,49 @@ namespace dm.Shibalana.Prices
             }
         }
 
-        private async void GetShibaMarketData()
+        private async void GetSerumMarketData()
         {
             try
             {
                 var client = new RestClient("https://www.lanadex.com");
                 var req = new RestRequest($"/api/trades/address/{serumCurrent}", DataFormat.Json);
                 var res = await client.GetAsync<LanadexTrades>(req);
-                marketData = res.Data.OrderByDescending(x => x.Time).First();
+                marketDataSerum = res.Data.OrderByDescending(x => x.Time).First();
 
-                log.Info($"GetShibaMarketData: OK");
+                log.Info($"GetSerumMarketData: OK");
+            }
+            catch (Exception ex)
+            {
+                log.Error(ex);
+            }
+        }
+
+        private async void GetSerumVolumeData()
+        {
+            try
+            {
+                var client = new RestClient("https://api.dexlab.space");
+                var req = new RestRequest($"v1/volumes/{serumCurrent}", DataFormat.Json);
+                var res = await client.GetAsync<DexLabVolume>(req);
+                serumVolume = res.Data.Summary.TotalVolume;
+
+                log.Info($"GetSerumVolumeData: OK");
+            }
+            catch (Exception ex)
+            {
+                log.Error(ex);
+            }
+        }
+
+        private async void GetCGMarketData()
+        {
+            try
+            {
+                var client = CoinGeckoClient.Instance;
+                marketDataCG = await client.CoinsClient
+                    .GetAllCoinDataWithId("shibalana", "false", true, true, false, false, false);
+
+                log.Info($"GetCGMarketData: OK");
             }
             catch (Exception ex)
             {

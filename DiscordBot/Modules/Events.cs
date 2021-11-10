@@ -51,11 +51,11 @@ namespace dm.Shibalana.DiscordBot
             tmrNick = new Timer(async _ =>
             {
                 var item = await Common.GetAllInfo(db).ConfigureAwait(false);
-                string status = $"MCap ${item.Price.CircMarketCapUSD.FormatLarge()} | !price";
+                string status = $"MCap ${item.FinalPrice.CircMarketCapUSD.FormatLarge()} | !price";
                 await client.SetGameAsync(status).ConfigureAwait(false);
 
-                string nick = $"${item.Price.PriceUSD.FormatUsd(6)} " +
-                    $"{item.Price.PriceUSDChange.Indicator()}";
+                string nick = $"${item.FinalPrice.PriceUSD.FormatUsd(6)} " +
+                    $"{item.FinalPrice.PriceUSDChange.Indicator()}";
                 var guilds = client.Guilds;
                 foreach (var guild in guilds)
                 {

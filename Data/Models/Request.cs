@@ -15,6 +15,7 @@ namespace dm.Shibalana.Data.Models
         public RequestResponse Response { get; set; }
         public ulong DiscordUserId { get; set; }
         public string DiscordUserName { get; set; }
+        public ulong DiscordChannelId { get; set; }
         public bool IsRateLimited { get; set; }
         public string Command { get; set; }
         public DateTime Date { get; set; }

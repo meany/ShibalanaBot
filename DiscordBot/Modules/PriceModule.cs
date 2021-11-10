@@ -63,11 +63,11 @@ namespace dm.Shibalana.DiscordBot.Modules
                 var item = await Common.GetAllInfo(db).ConfigureAwait(false);
 
                 string title = $"Shibalana Price and Statistics";
-                string footerText = $"{item.Price.Date.ToDate()}. Powered by Lanadex.";
+                string footerText = $"{item.FinalPrice.Date.ToDate()}. Powered by LanaDex & CoinGecko.";
                 if (item.IsOutOfSync())
                     footerText += "\nStats might be out of sync. The admin has been contacted.";
 
-                string label1 = $"100 USD:     {(item.Price.PriceSHIBAForOneUSDC * 100).FormatShiba()} SHIBA\n";
+                //string label1 = $"100 USDC: {(item.FinalPrice.PriceSHIBAForOneUSDC * 100).FormatLarge()} SHIBA\n";
                 //string value1 = $"{item.Price.PriceUSDChange.Indicator()}{item.Price.PriceUSDChangePct.FormatPct(0)}%";
 
                 var output = new EmbedBuilder();
@@ -76,15 +76,16 @@ namespace dm.Shibalana.DiscordBot.Modules
                 {
                     author.WithName(title);
                 })
-                .WithDescription($"**{item.Price.PriceUSD.FormatUsd(6)} USD** for a single {shiba}!")
-                .AddField($"— Price & Market Cap", "```ml\n" +
+                .WithDescription($"**{item.FinalPrice.PriceUSD.FormatUsd(6)} USDC** for a single {shiba}!")
+                .AddField($"— Price & Trading", "```ml\n" +
                     //$"{label1,-20} {value1,10:C}\n" +
-                    label1 +
-                    $"Full Supply: ${item.Price.FullMarketCapUSD.FormatLarge()}\n" +
-                    $"Circulating: ${item.Price.CircMarketCapUSD.FormatLarge()}\n" +
+                    $"100 USDC = {(item.FinalPrice.PriceSHIBAForOneUSDC * 100).FormatLarge()} SHIBA\n" +
+                    $"Full MCap: ${item.Prices[0].FullMarketCapUSD.FormatLarge()}\n" +
+                    $"Circ MCap: ${item.FinalPrice.CircMarketCapUSD.FormatLarge()}\n" +
+                    $"Vol (24h): ${item.FinalPrice.VolumeUSD.FormatLarge()}\n" +
                     "```")
                 .AddField($"— Stats", "```ml\n" +
-                    $"Circulating: {item.Stat.Circulation.FormatShiba()} SHIBA\n" +
+                    $"Circulation: {item.Stat.Circulation.FormatLarge()} SHIBA\n" +
                     $"Holders:     {item.Stat.Holders.FormatLarge()}\n" +
                     "```")
                 .WithFooter(footer =>

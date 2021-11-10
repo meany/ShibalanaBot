@@ -15,16 +15,28 @@ namespace dm.Shibalana.Data
         {
             var vm = new ViewModels.AllInfo();
             vm.Stat = await GetStats(db);
-            vm.Price = await GetPrices(db, vm.Stat.Group);
+            vm.Prices = await GetPrices(db, vm.Stat.Group);
 
-            if (vm.Price == null)
+            if (vm.Prices == null || vm.Prices.Count == 0)
             {
-                vm.Price = await db.Prices
+                vm.Prices = new List<Price>();
+                vm.Prices.Add(await db.Prices
                     .AsNoTracking()
                     .OrderByDescending(x => x.Date)
                     .FirstOrDefaultAsync()
-                    .ConfigureAwait(false);
+                    .ConfigureAwait(false));
             }
+
+            vm.FinalPrice = new Price
+            {
+                Date = vm.Prices[0].Date,
+                CircMarketCapUSD = vm.Prices[0].CircMarketCapUSD,
+                FullMarketCapUSD = vm.Prices[0].FullMarketCapUSD,
+                PriceSHIBAForOneUSDC = vm.Prices.WeightedAverage(x => x.PriceSHIBAForOneUSDC, x => x.VolumeUSD),
+                PriceUSD = vm.Prices.WeightedAverage(x => x.PriceUSD, x => x.VolumeUSD),
+                PriceUSDCForOneSHIBA = vm.Prices.WeightedAverage(x => x.PriceUSDCForOneSHIBA, x => x.VolumeUSD),
+                VolumeUSD = vm.Prices.Sum(x => x.VolumeUSD)
+            };
 
             return vm;
         }
@@ -38,13 +50,12 @@ namespace dm.Shibalana.Data
                 .ConfigureAwait(false);
         }
 
-        public static async Task<Price> GetPrices(AppDbContext db, Guid group = new Guid())
+        public static async Task<List<Price>> GetPrices(AppDbContext db, Guid group = new Guid())
         {
             return await db.Prices
                 .AsNoTracking()
                 .Where(x => group == new Guid() || x.Group == group)
-                .OrderByDescending(x => x.Date)
-                .FirstOrDefaultAsync()
+                .ToListAsync()
                 .ConfigureAwait(false);
         }
     }

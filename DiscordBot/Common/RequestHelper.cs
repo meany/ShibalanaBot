@@ -44,10 +44,11 @@ namespace dm.Shibalana.DiscordBot
         private static async Task<RequestResult> CreateAndCheckRateLimit(AppDbContext db,
             ICommandContext context, int seconds)
         {
-            // TODO: comman granularity
+            // TODO: command granularity
 
             var user = context.User;
             string message = context.Message.ToString();
+            ulong channelId = context.Channel.Id;
             bool rateLimited = false;
             bool alreadyWarned = false;
             var now = DateTime.Now;
@@ -55,8 +56,9 @@ namespace dm.Shibalana.DiscordBot
             var lastReq = await db.Requests
                 .AsNoTracking()
                 .OrderByDescending(x => x.Date)
-                .FirstOrDefaultAsync(x => x.DiscordUserId == user.Id &&
+                .FirstOrDefaultAsync(x => //x.DiscordUserId == user.Id &&
                     //x.Command == message &&
+                    x.DiscordChannelId == channelId &&
                     x.IsRateLimited == false)
                 .ConfigureAwait(false);
 
@@ -68,8 +70,9 @@ namespace dm.Shibalana.DiscordBot
                 var warnReq = await db.Requests
                     .AsNoTracking()
                     .OrderByDescending(x => x.Date)
-                    .FirstOrDefaultAsync(x => x.DiscordUserId == user.Id &&
+                    .FirstOrDefaultAsync(x => //x.DiscordUserId == user.Id &&
                         //x.Command == message &&
+                        x.DiscordChannelId == channelId &&
                         x.IsRateLimited == true)
                     .ConfigureAwait(false);
 
@@ -85,6 +88,7 @@ namespace dm.Shibalana.DiscordBot
                     Date = now,
                     DiscordUserId = user.Id,
                     DiscordUserName = user.Username,
+                    DiscordChannelId = channelId,
                     IsRateLimited = rateLimited
                 },
                 AlreadyWarned = alreadyWarned,
