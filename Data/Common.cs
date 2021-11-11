@@ -27,13 +27,21 @@ namespace dm.Shibalana.Data
                     .ConfigureAwait(false));
             }
 
+            if (vm.Prices.Count == 1)
+                vm.Prices[0].Source = PriceSource.LanaDex;
+            var fp = vm.Prices.Single(x => x.Source == PriceSource.LanaDex);
+
             vm.FinalPrice = new Price
             {
-                Date = vm.Prices[0].Date,
-                CircMarketCapUSD = vm.Prices[0].CircMarketCapUSD,
-                FullMarketCapUSD = vm.Prices[0].FullMarketCapUSD,
+                Date = fp.Date,
+                CircMarketCapUSD = fp.CircMarketCapUSD,
+                FullMarketCapUSD = fp.FullMarketCapUSD,
+                MarketCapUSDChange = fp.MarketCapUSDChange,
+                MarketCapUSDChangePct = fp.MarketCapUSDChangePct,
                 PriceSHIBAForOneUSDC = vm.Prices.WeightedAverage(x => x.PriceSHIBAForOneUSDC, x => x.VolumeUSD),
                 PriceUSD = vm.Prices.WeightedAverage(x => x.PriceUSD, x => x.VolumeUSD),
+                PriceUSDChange = fp.PriceUSDChange,
+                PriceUSDChangePct = vm.Prices.WeightedAverage(x => x.PriceUSDChangePct, x => x.VolumeUSD),
                 PriceUSDCForOneSHIBA = vm.Prices.WeightedAverage(x => x.PriceUSDCForOneSHIBA, x => x.VolumeUSD),
                 VolumeUSD = vm.Prices.Sum(x => x.VolumeUSD)
             };

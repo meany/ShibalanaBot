@@ -6,7 +6,7 @@ namespace dm.Shibalana.Data.Models
 {
     public enum PriceSource
     {
-        Lanadex = 0,
+        LanaDex = 0,
         CoinGecko = 1
     }
 

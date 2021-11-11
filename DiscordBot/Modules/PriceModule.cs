@@ -67,8 +67,8 @@ namespace dm.Shibalana.DiscordBot.Modules
                 if (item.IsOutOfSync())
                     footerText += "\nStats might be out of sync. The admin has been contacted.";
 
-                //string label1 = $"100 USDC: {(item.FinalPrice.PriceSHIBAForOneUSDC * 100).FormatLarge()} SHIBA\n";
-                //string value1 = $"{item.Price.PriceUSDChange.Indicator()}{item.Price.PriceUSDChangePct.FormatPct(0)}%";
+                //string label1 = $"Full MCap: ${item.Prices[0].FullMarketCapUSD.FormatLarge()}";
+                //string value1 = $"{item.FinalPrice.MarketCapUSDChange.Indicator()}{item.FinalPrice.MarketCapUSDChangePct.FormatUsd(0)}%";
 
                 var output = new EmbedBuilder();
                 output.WithColor(Color.THEME)
@@ -76,10 +76,11 @@ namespace dm.Shibalana.DiscordBot.Modules
                 {
                     author.WithName(title);
                 })
-                .WithDescription($"**{item.FinalPrice.PriceUSD.FormatUsd(6)} USDC** for a single {shiba}!")
+                .WithDescription($"**{item.FinalPrice.PriceUSD.FormatUsd(6)} USDC** for a single {shiba}! " +
+                $"{item.FinalPrice.PriceUSDChange.Indicator()} {item.FinalPrice.PriceUSDChangePct.FormatUsd(0)}%")
                 .AddField($"— Price & Trading", "```ml\n" +
-                    //$"{label1,-20} {value1,10:C}\n" +
                     $"100 USDC = {(item.FinalPrice.PriceSHIBAForOneUSDC * 100).FormatLarge()} SHIBA\n" +
+                    //$"{label1,-20} {value1,10:C}\n" + 
                     $"Full MCap: ${item.Prices[0].FullMarketCapUSD.FormatLarge()}\n" +
                     $"Circ MCap: ${item.FinalPrice.CircMarketCapUSD.FormatLarge()}\n" +
                     $"Vol (24h): ${item.FinalPrice.VolumeUSD.FormatLarge()}\n" +

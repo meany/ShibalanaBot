@@ -123,7 +123,7 @@ namespace dm.Shibalana.Prices
                     Group = group,
                     PriceSHIBAForOneUSDC = serum_priceOneUsd,
                     PriceUSDCForOneSHIBA = serum_priceOneShiba,
-                    Source = PriceSource.Lanadex,
+                    Source = PriceSource.LanaDex,
 
                     FullMarketCapUSD = int.Parse(Math.Round(serum_fullMktCapUsd).ToString()),
                     CircMarketCapUSD = int.Parse(Math.Round(serum_circMktCapUsd).ToString()),
@@ -156,7 +156,9 @@ namespace dm.Shibalana.Prices
                 Change coinG_mktCapUsdChg = (coinG_mktCapUsdChgAmt > 0) ?
                     Change.Up : (coinG_mktCapUsdChgAmt < 0) ? Change.Down : Change.None;
                 decimal coinG_mktCapUsdChgPct = (marketDataCG.MarketData.MarketCapChangePercentage24HInCurrency.Count == 0) ?
-                    0 : decimal.Parse(marketDataCG.MarketData.MarketCapChangePercentage24HInCurrency["usd"].ToString(), NumberStyles.Any);
+                    0 : Math.Abs(decimal.Parse(marketDataCG.MarketData.MarketCapChangePercentage24HInCurrency["usd"].ToString(), NumberStyles.Any));
+                
+                // volume
                 int coinG_volumeUsd = (int)Math.Round(marketDataCG.MarketData.TotalVolume["usd"].Value);
 
                 // changes
@@ -171,7 +173,7 @@ namespace dm.Shibalana.Prices
                 decimal coinG_priceUsdChgAmt = decimal.Parse(coinG_changeUsd, NumberStyles.Any);
                 Change coinG_priceUsdChg = (coinG_priceUsdChgAmt > 0) ?
                     Change.Up : (coinG_priceUsdChgAmt < 0) ? Change.Down : Change.None;
-                decimal coinG_priceUsdChgPct = decimal.Parse(coinG_changeUsdPct, NumberStyles.Any);
+                decimal coinG_priceUsdChgPct = Math.Abs(decimal.Parse(coinG_changeUsdPct, NumberStyles.Any));
 
                 var coinG_item = new Price
                 {
@@ -187,7 +189,7 @@ namespace dm.Shibalana.Prices
                     PriceUSD = coinG_priceUsd,
 
                     MarketCapUSDChange = coinG_mktCapUsdChg,
-                    MarketCapUSDChangePct = Math.Round(coinG_mktCapUsdChgPct, 8) > 999 ? 999 : Math.Round(coinG_mktCapUsdChgPct, 8),
+                    MarketCapUSDChangePct = Math.Round(coinG_mktCapUsdChgPct, 8),
                     PriceUSDChange = coinG_priceUsdChg,
                     PriceUSDChangePct = coinG_priceUsdChgPct,
 
