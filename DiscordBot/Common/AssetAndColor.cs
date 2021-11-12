@@ -1,6 +1,6 @@
 ﻿namespace dm.Shibalana.DiscordBot
 {
-    public static class Asset
+    public static class BotAsset
     {
         public static readonly string CLOCK = "https://media.discordapp.net/attachments/452943060821606403/466652124768501782/clock.png";
         public static readonly string ERROR = "https://cdn.discordapp.com/attachments/452943060821606403/466652285590568988/error.png";
@@ -9,7 +9,7 @@
         public static readonly string SUCCESS = "https://media.discordapp.net/attachments/452943060821606403/466652132951719946/success.png";
     }
 
-    public static class Color
+    public static class BotColor
     {
         public static readonly uint THEME = 0x33CC99;
 

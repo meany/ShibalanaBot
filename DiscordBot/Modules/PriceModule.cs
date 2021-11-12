@@ -71,7 +71,7 @@ namespace dm.Shibalana.DiscordBot.Modules
                 //string value1 = $"{item.FinalPrice.MarketCapUSDChange.Indicator()}{item.FinalPrice.MarketCapUSDChangePct.FormatUsd(0)}%";
 
                 var output = new EmbedBuilder();
-                output.WithColor(Color.THEME)
+                output.WithColor(BotColor.THEME)
                 .WithAuthor(author =>
                 {
                     author.WithName(title);

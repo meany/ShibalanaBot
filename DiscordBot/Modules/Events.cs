@@ -56,17 +56,20 @@ namespace dm.Shibalana.DiscordBot
 
                 string nick = $"${item.FinalPrice.PriceUSD.FormatUsd(6)} " +
                     $"{item.FinalPrice.PriceUSDChange.Indicator()}";
+
+                Color color = (item.FinalPrice.PriceUSDChange == Change.Down) ?
+                    Color.Red : Color.Green;
+
                 var guilds = client.Guilds;
                 foreach (var guild in guilds)
                 {
                     var me = guild.GetUser(client.CurrentUser.Id);
-                    if (me.Nickname == nick)
-                        return;
+                    if (me.Nickname != nick)
+                        await me.ModifyAsync(x => x.Nickname = nick);
 
-                    await me.ModifyAsync(x =>
-                    {
-                        x.Nickname = nick;
-                    });
+                    var role = guild.GetRole(config.IndicatorRoleId);
+                    if (role != null && role.Color != color)
+                        await role.ModifyAsync(x => x.Color = color);
                 }
             }, null, TimeSpan.FromSeconds(1), TimeSpan.FromSeconds(30));
         }

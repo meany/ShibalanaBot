@@ -11,11 +11,11 @@ namespace dm.Shibalana.DiscordBot
         public static EmbedBuilder OutputError(string error)
         {
             var output = new EmbedBuilder();
-            output.WithColor(Color.ERROR)
+            output.WithColor(BotColor.ERROR)
                 .WithAuthor(author =>
                 {
                     author.WithName(error)
-                        .WithIconUrl(Asset.ERROR);
+                        .WithIconUrl(BotAsset.ERROR);
                 });
             return output;
         }
@@ -28,11 +28,11 @@ namespace dm.Shibalana.DiscordBot
         public static EmbedBuilder OutputInfo(string title, string body)
         {
             var output = new EmbedBuilder();
-            output.WithColor(Color.INFO)
+            output.WithColor(BotColor.INFO)
                 .WithAuthor(author =>
                 {
                     author.WithName(title)
-                        .WithIconUrl(Asset.INFO);
+                        .WithIconUrl(BotAsset.INFO);
                 })
                 .WithDescription(body);
             return output;
@@ -41,11 +41,11 @@ namespace dm.Shibalana.DiscordBot
         public static EmbedBuilder OutputSuccess(string title, string body)
         {
             var output = new EmbedBuilder();
-            output.WithColor(Color.SUCCESS)
+            output.WithColor(BotColor.SUCCESS)
                 .WithAuthor(author =>
                 {
                     author.WithName(title)
-                        .WithIconUrl(Asset.SUCCESS);
+                        .WithIconUrl(BotAsset.SUCCESS);
                 })
                 .WithDescription(body);
             return output;

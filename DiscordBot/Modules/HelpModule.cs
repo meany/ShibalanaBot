@@ -26,7 +26,7 @@ namespace dm.Shibalana.DiscordBot
         public async Task Help(string command = "")
         {
             var output = new EmbedBuilder()
-                .WithColor(Color.THEME);
+                .WithColor(BotColor.THEME);
             if (command == string.Empty)
             {
                 var mods = commands.Modules
@@ -43,7 +43,7 @@ namespace dm.Shibalana.DiscordBot
                 }).WithFooter(footer =>
                 {
                     footer.WithText($"Use '{config.BotPrefix}help <command>' to get help with a specifc command")
-                        .WithIconUrl(Asset.INFO);
+                        .WithIconUrl(BotAsset.INFO);
                 });
             }
             else

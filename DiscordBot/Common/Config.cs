@@ -14,5 +14,6 @@ namespace dm.Shibalana.DiscordBot
         public string EmoteShiba { get; set; }
         public int RequestCooldown { get; set; }
         public List<ulong> AdminRoleIds { get; set; }
+        public ulong IndicatorRoleId { get; set; }
     }
 }
