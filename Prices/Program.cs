@@ -29,7 +29,7 @@ namespace dm.Shibalana.Prices
         private static CoinFullDataById marketDataCG;
         private static CoinGecko.Entities.Response.Simple.Price priceData;
         private static BigInteger shibaSupply;
-        private static BigInteger shibaCirc;
+        private static decimal shibaCirc;
         private static int shibaHolders;
         private static int shibaDecimals;
         private static decimal serumVolume;
@@ -37,13 +37,6 @@ namespace dm.Shibalana.Prices
         private static Price prices24hAgo;
 
         private static readonly string tokenAddress = "Dhg9XnzJWzSQqH2aAnhPTEJHGQAkALDfD98MA499A7pa";
-        private static readonly string[] teamAddresses = new string[] {
-            "2vQBVYD6fn1Z4iA2JWo3qY1tMBanspkHY4TfLe51hj9b",
-            "Ewg558ARXCoEtCHeGmicUznRWvbae6eczGUFS1tkPBX8",
-            "A8GFDkvqg6WLGTsXksiabD3oKeB2aQXtNoG98R9Hr5QG",
-            "9huAyo2PytpiqqNDvvd5tb2nQNXpjE6xKS81M4BdeVES"
-        };
-
         private static readonly string serumSHIBA_USDC_1dot0 = "3M8uZhLZMxFUedsEgPzywZr9qbGTv3kKNMCEfAmg8iyK";
         private static string serumCurrent = serumSHIBA_USDC_1dot0;
 
@@ -66,7 +59,7 @@ namespace dm.Shibalana.Prices
                     .BuildServiceProvider();
                 db = services.GetService<AppDbContext>();
 
-                if (db.Database.GetPendingMigrations().Count() > 0)
+                if (db.Database.GetPendingMigrations().Any())
                 {
                     log.Info("Migrating database");
                     db.Database.Migrate();
@@ -101,9 +94,8 @@ namespace dm.Shibalana.Prices
 
                 // market cap
                 decimal supply = shibaSupply.ToToken(shibaDecimals);
-                decimal circ = shibaCirc.ToToken(shibaDecimals);
                 decimal serum_fullMktCapUsd = serum_priceOneShiba * supply;
-                decimal serum_circMktCapUsd = serum_priceOneShiba * circ;
+                decimal serum_circMktCapUsd = serum_priceOneShiba * shibaCirc;
                 int serum_volumeUsd = (int)Math.Round(serumVolume);
 
                 decimal serum_mktCapUsdChgAmt = serum_fullMktCapUsd - prices24hAgo.FullMarketCapUSD;
@@ -208,7 +200,7 @@ namespace dm.Shibalana.Prices
                     Date = DateTime.UtcNow,
                     Group = group,
                     Supply = supply,
-                    Circulation = circ,
+                    Circulation = shibaCirc,
                     Holders = shibaHolders
                 };
 
@@ -284,18 +276,13 @@ namespace dm.Shibalana.Prices
                 var req3 = new RestRequest($"token/meta?token={tokenAddress}", DataFormat.Json);
                 var res3 = await client.GetAsync<Solscan>(req3);
 
-                var teamAmt = new BigInteger();
-                foreach (string addr in teamAddresses)
-                {
-                    var req = new RestRequest($"account?address={addr}", DataFormat.Json);
-                    var res = await client.GetAsync<Solscan>(req);
-                    teamAmt += BigInteger.Parse(res.Data.TokenInfo.TokenAmount.Amount);
-                }
-
                 shibaDecimals = res1.Data.TokenInfo.Decimals;
-
                 shibaSupply = BigInteger.Parse(res1.Data.TokenInfo.Supply);
-                shibaCirc = shibaSupply - teamAmt;
+
+                decimal teamAmts = await db.AddressInfos
+                    .Where(x => x.IsPartOfTeam)
+                    .SumAsync(x => x.Amount);
+                shibaCirc = shibaSupply.ToToken(shibaDecimals) - teamAmts;
                 shibaHolders = res3.Data.Holder;
 
                 log.Info($"GetShibaCirc: OK");

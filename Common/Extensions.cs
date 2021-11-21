@@ -29,7 +29,7 @@ namespace dm.Shibalana
             if (source == 0)
                 return "0";
 
-            int mag = (int)(Math.Floor(Math.Log10(source)) / 3);
+            ulong mag = (ulong)(Math.Floor(Math.Log10(source)) / 3);
             double divisor = Math.Pow(10, mag * 3);
             double shortNumber = source / divisor;
             string suffix = string.Empty;

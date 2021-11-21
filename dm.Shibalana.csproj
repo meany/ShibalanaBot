@@ -7,14 +7,17 @@
   <ItemGroup>
     <Compile Remove="Data\**" />
     <Compile Remove="DiscordBot\**" />
+    <Compile Remove="Infos\**" />
     <Compile Remove="Prices\**" />
     <Compile Remove="TelegramBot\**" />
     <EmbeddedResource Remove="Data\**" />
     <EmbeddedResource Remove="DiscordBot\**" />
+    <EmbeddedResource Remove="Infos\**" />
     <EmbeddedResource Remove="Prices\**" />
     <EmbeddedResource Remove="TelegramBot\**" />
     <None Remove="Data\**" />
     <None Remove="DiscordBot\**" />
+    <None Remove="Infos\**" />
     <None Remove="Prices\**" />
     <None Remove="TelegramBot\**" />
   </ItemGroup>
