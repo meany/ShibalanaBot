@@ -17,7 +17,6 @@ namespace dm.Shibalana.DiscordBot
         private readonly Config config;
         private readonly AppDbContext db;
         private static readonly Logger log = LogManager.GetCurrentClassLogger();
-        private Timer tmrNick;
 
         public Events(CommandService commands, DiscordSocketClient client, IServiceProvider services, Config config, AppDbContext db)
         {
@@ -44,34 +43,6 @@ namespace dm.Shibalana.DiscordBot
                         $"Try using `{config.BotPrefix}help` if you're stuck.").ConfigureAwait(false);
                 return;
             }
-        }
-
-        public async Task HandleConnected()
-        {
-            tmrNick = new Timer(async _ =>
-            {
-                var item = await Common.GetAllInfo(db).ConfigureAwait(false);
-                string status = $"MCap ${item.FinalPrice.CircMarketCapUSD.FormatLarge()} | !price";
-                await client.SetGameAsync(status).ConfigureAwait(false);
-
-                string nick = $"${item.FinalPrice.PriceUSD.FormatUsd(6)} " +
-                    $"{item.FinalPrice.PriceUSDChange.Indicator()}";
-
-                Color color = (item.FinalPrice.PriceUSDChange == Change.Down) ?
-                    Color.Red : Color.Green;
-
-                var guilds = client.Guilds;
-                foreach (var guild in guilds)
-                {
-                    var me = guild.GetUser(client.CurrentUser.Id);
-                    if (me.Nickname != nick)
-                        await me.ModifyAsync(x => x.Nickname = nick);
-
-                    var role = guild.GetRole(config.IndicatorRoleId);
-                    if (role != null && role.Color != color)
-                        await role.ModifyAsync(x => x.Color = color);
-                }
-            }, null, TimeSpan.FromSeconds(1), TimeSpan.FromSeconds(30));
         }
 
         public async Task HandleJoin(SocketGuildUser user)

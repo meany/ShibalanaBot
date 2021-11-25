@@ -93,14 +93,60 @@ namespace dm.Shibalana.DiscordBot
 
                 await Install().ConfigureAwait(false);
                 await Start().ConfigureAwait(false);
-                await client.SetGameAsync($"{config.BotPrefix}price").ConfigureAwait(false);
+                //await client.SetGameAsync($"{config.BotPrefix}price").ConfigureAwait(false);
 
-                await Task.Delay(-1).ConfigureAwait(false);
+                await PriceLoop();
+                //await Task.Delay(-1).ConfigureAwait(false);
             }
             catch (Exception ex)
             {
                 log.Error(ex);
             }
+        }
+
+        private async Task PriceLoop()
+        {
+            int ticks = 0;
+            int next = 0;
+            string[] statuses = Array.Empty<string>();
+
+            while (true)
+            {
+                if (statuses.Length == 0 || next == 0)
+                {
+                    var item = await Common.GetAllInfo(db).ConfigureAwait(false);
+                    statuses = new string[]
+                    {
+                        $"MCap ${item.FinalPrice.CircMarketCapUSD.FormatLarge()}",
+                        $"Vol ${item.FinalPrice.VolumeUSD.FormatLarge()}",
+                        $"Holders {item.Stat.Holders.FormatLarge()}",
+                    };
+
+                    string nick = $"${item.FinalPrice.PriceUSD.FormatUsd(6)} " +
+                        $"{item.FinalPrice.PriceUSDChange.Indicator()}";
+
+                    Color color = (item.FinalPrice.PriceUSDChange == Change.Down) ?
+                        Color.Red : Color.Green;
+
+                    var guilds = client.Guilds;
+                    foreach (var guild in guilds)
+                    {
+                        var me = guild.GetUser(client.CurrentUser.Id);
+                        if (me != null && me.Nickname != nick)
+                            await me.ModifyAsync(x => x.Nickname = nick);
+
+                        var role = guild.GetRole(config.IndicatorRoleId);
+                        if (role != null && role.Color != color)
+                            await role.ModifyAsync(x => x.Color = color);
+                    }
+                }
+
+                next = ticks++ % statuses.Length;
+                //log.Info(next);
+                await client.SetGameAsync($"{statuses[next]} | !price");
+
+                await Task.Delay(12000);
+            };
         }
 
         private Task Log(LogMessage msg)
@@ -114,7 +160,6 @@ namespace dm.Shibalana.DiscordBot
             try
             {
                 var events = new Events(commands, client, services, config, db);
-                client.Connected += events.HandleConnected;
                 client.MessageReceived += events.HandleCommand;
                 client.ReactionAdded += events.HandleReaction;
                 client.UserJoined += events.HandleJoin;
